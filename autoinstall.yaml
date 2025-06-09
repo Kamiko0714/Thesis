@@ -4,12 +4,12 @@ autoinstall:
   identity:
     hostname: Cluster
     username: ubuntu
-    password: "$6$b9Eesq5Pp.2LNRrW$HK0k8hNwG1RvwMGxz0e5pG7YT0JohGXJsbvYtJVOmVwVu8IA9BVAH5vQYuz56KqlfEGUweJo.cIP.xRmWtdtF0"  # ← hasil openssl passwd -6
+    password: ""
 
   ssh:
     install-server: true
     authorized-keys:
-      - ssh-ed25519 AAAAC3NzaC112DI1NTE5AAAAINmedLt+K9pLuC9SPsAMtw12QMT+0kMqTz1c26YnJHbT admins@cluster
+      - 
 
   storage:
     layout:
