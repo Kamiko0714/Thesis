@@ -1,0 +1,44 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: Cluster
+    username: ubuntu
+    password: "$6$b9Eesq5Pp.2LNRrW$HK0k8hNwG1RvwMGxz0e5pG7YT0JohGXJsbvYtJVOmVwVu8IA9BVAH5vQYuz56KqlfEGUweJo.cIP.xRmWtdtF0"  # ← hasil openssl passwd -6
+
+  ssh:
+    install-server: true
+    authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC112DI1NTE5AAAAINmedLt+K9pLuC9SPsAMtw12QMT+0kMqTz1c26YnJHbT admins@cluster
+
+  storage:
+    layout:
+      name: direct
+
+  late-commands:
+    - curtin in-target -- apt update
+    - curtin in-target -- apt install -y curl apt-transport-https ca-certificates gnupg
+    - curtin in-target -- curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - curtin in-target -- bash -c "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' > /etc/apt/sources.list.d/kubernetes.list"
+    - curtin in-target -- apt update
+    - curtin in-target -- apt install -y kubelet kubeadm kubectl
+    - curtin in-target -- apt-mark hold kubelet kubeadm kubectl
+    - curtin in-target -- swapoff -a
+    - curtin in-target -- sed -i '/ swap / s/^/#/' /etc/fstab
+
+    # Install Docker
+    - curtin in-target -- apt install -y docker.io
+    - curtin in-target -- systemctl enable docker
+    - curtin in-target -- systemctl start docker
+
+    # Install Prometheus dan Grafana
+    - curtin in-target -- mkdir -p /opt/monitoring
+    - curtin in-target -- bash -c "echo '[Unit]
+Description=Prometheus
+[Service]
+ExecStart=/usr/local/bin/prometheus
+[Install]
+WantedBy=default.target' > /etc/systemd/system/prometheus.service"
+
+    # Tambah user ke docker group
+    - curtin in-target -- usermod -aG docker ubuntu
